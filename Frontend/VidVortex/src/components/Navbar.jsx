@@ -1,7 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import HomeIcon from "@mui/icons-material/Home";
 import { Link } from "react-router-dom"
+import { useDispatch, useSelector } from "react-redux";
+import VideoCallIcon from '@mui/icons-material/VideoCall';
+import { logout } from "../redux/userSlice";
+import Upload from "./Upload";
+import { useNavigate } from "react-router-dom";
 
 const Container = styled.div`
   position: sticky;
@@ -49,23 +54,59 @@ const Button = styled.button`
   gap: 5px;
 `;
 
+const User = styled.div`
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:500;
+  color: ${({ theme }) => theme.text};
+`;
+
+const Avatar = styled.img`
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  background-color: #999
+`;
+
 const Navbar = () => {
+
+  const [open,setOpen] = useState(false)
+  const navigate = useNavigate()
+
+  const dispatch = useDispatch();
+
+  const handleLogout = () =>{
+    dispatch(logout());
+    navigate("/")
+  }
+
+  const {currentUser} = useSelector(state=>state.user)
+
   return (
+    <>
     <Container>
-      <Wrapper>
+    <Wrapper>
         <Search>
-          <Input placeholder="Search" />
-          <HomeIcon />
-          
+        <Input placeholder="Search" />
+        <HomeIcon />
+        
         </Search>
-        <Link to="signin" style={{ textDecoration: "none" }}>
-          <Button>
-            <HomeIcon />
-            SIGN IN
-          </Button>
-        </Link>
-      </Wrapper>
-    </Container>
+        {currentUser ? (<User>
+        <VideoCallIcon onClick={()=>setOpen(true)}/>
+        <Avatar src={currentUser.img}/>
+        {currentUser.name}
+        <Button onClick={handleLogout}>Logout</Button>
+        </User>) : ( <Link to="signin" style={{ textDecoration: "none" }}>
+        <Button>
+        <HomeIcon />
+        SIGN IN
+        </Button>
+        </Link>)}
+        </Wrapper>
+        </Container>
+    {open && <Upload setOpen={setOpen}/>}
+        </>
   );
 };
 

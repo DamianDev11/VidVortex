@@ -6,10 +6,13 @@ import commentRoutes from "./routes/comments.js";
 import videoRoutes from "./routes/videos.js";
 import authRoutes from "./routes/auth.js";
 import cookieParser from "cookie-parser";
+import cors from "cors"
+import compression from "compression";
 
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 7000;
+
 
 const connect = () => {
   mongoose
@@ -22,7 +25,12 @@ const connect = () => {
     });
 };
 
-app.use(cookieParser())
+app.use(cors({
+  origin: 'http://localhost:5173', 
+  credentials: true,
+}));
+app.use(compression());
+app.use(cookieParser());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);

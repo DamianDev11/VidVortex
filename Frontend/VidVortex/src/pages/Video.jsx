@@ -1,11 +1,19 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import ThumbUpOutlinedIcon from "@mui/icons-material/ThumbUpOutlined";
+import ThumbDownIcon from "@mui/icons-material/ThumbDown";
+import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import ThumbDownOffAltOutlinedIcon from "@mui/icons-material/ThumbDownOffAltOutlined";
 import ReplyOutlinedIcon from "@mui/icons-material/ReplyOutlined";
 import AddTaskOutlinedIcon from "@mui/icons-material/AddTaskOutlined";
 import Comments from "../components/Comments";
 import Card from "../components/Card";
+import { useDispatch, useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
+import axios from "axios";
+import { fetchSuccess, like, dislike } from "../redux/videoSlice";
+import { format } from "timeago.js";
+import { subscription } from "../redux/userSlice";
 
 const Container = styled.div`
   display: flex;
@@ -55,9 +63,7 @@ const Hr = styled.hr`
   border: 0.5px solid ${({ theme }) => theme.soft};
 `;
 
-const Recommendation = styled.div`
-  flex: 2;
-`;
+
 const Channel = styled.div`
   display: flex;
   justify-content: space-between;
@@ -106,32 +112,97 @@ const Subscribe = styled.button`
   cursor: pointer;
 `;
 
+const VideoFrame = styled.video`
+  max-height:720px;
+  width:100%;
+  object-fit:cover;
+`;
+
 const Video = () => {
+  const { currentUser } = useSelector((state) => state.user);
+  const { currentVideo } = useSelector((state) => state.video);
+
+  const dispatch = useDispatch();
+
+  const path = useLocation().pathname.split("/")[2];
+
+  const [channel, setChannel] = useState({});
+  
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const videoRes = await axios.get(
+          `http://localhost:5000/api/videos/find/${path}`
+        );
+        const channelRes = await axios.get(
+          `http://localhost:5000/api/users/find/${videoRes.data.userId}`
+        );
+        setChannel(channelRes.data);
+        dispatch(fetchSuccess(videoRes.data));
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    fetchData();
+  }, [path, dispatch]);
+
+  const handleLike = async () => {
+    await axios.put(`http://localhost:5000/api/users/like/${currentVideo._id}`,
+    {
+      withCredentials: true,
+    });
+    dispatch(like(currentUser._id));
+  };
+  const handleDislike = async () => {
+    await axios.put(
+      `http://localhost:5000/api/users/dislike/${currentVideo._id}`,
+      {
+        withCredentials: true,
+      }
+    );
+    dispatch(dislike(currentUser._id));
+  };
+
+  const handleSub = async () => {
+    currentUser.subscribedUsers.includes(channel._id) ?
+    await axios.put(
+      `http://localhost:5000/api/users/unsub/${channel._id}`
+    ) :
+    await axios.put(
+      `http://localhost:5000/api/users/sub/${channel._id}`
+    );
+    dispatch(subscription(channel._id));
+  };
   return (
     <Container>
       <Content>
         <VideoWrapper>
-          <iframe
-            width="100%"
-            height="720"
-            src="https://www.youtube.com/embed/u-Lftv2spqA"
-            title="ＷＡＹ　ＢＡＣＫ　ＨＯＭＥ"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen
-          ></iframe>
+          <VideoFrame src={currentVideo?.videoUrl} controls/>
         </VideoWrapper>
-        <Title>Dam Video</Title>
+        <Title>{currentVideo?.title}</Title>
         <Details>
-          <Info>100,000 views • Dec 31, 2023</Info>
+          <Info>
+            {currentVideo?.views} views • {format(currentVideo?.createdAt)}
+          </Info>
           <Buttons>
-            <Button>
-              <ThumbUpOutlinedIcon /> 123
+            <Button onClick={handleLike}>
+              {currentVideo?.likes?.includes(currentUser._id) ? (
+                <ThumbUpIcon />
+              ) : (
+                <ThumbUpOutlinedIcon />
+              )}{" "}
+              {currentVideo?.likes?.length}
             </Button>
             <Button>
-              <ThumbDownOffAltOutlinedIcon /> Dislike
+              {currentVideo?.dislikes?.includes(currentUser._id) ? (
+                <ThumbDownIcon />
+              ) : (
+                <ThumbDownOffAltOutlinedIcon />
+              )}{" "}
+              Dislike
             </Button>
-            <Button>
+            <Button onClick={handleDislike}>
               <ReplyOutlinedIcon /> Share
             </Button>
             <Button>
@@ -142,37 +213,22 @@ const Video = () => {
         <Hr />
         <Channel>
           <ChannelInfo>
-            <Image src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHBlb3BsZXxlbnwwfHwwfHx8MA%3D%3D" />
+            <Image src={channel.img} />
             <ChannelDetail>
-              <ChannelName>Dam</ChannelName>
-              <ChannelCounter>100K subscribers</ChannelCounter>
-              <Description>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit.
-                Ducimus inventore alias earum quae a accusantium assumenda quo,
-                voluptatem eaque magnam.
-              </Description>
+              <ChannelName>{channel.name}</ChannelName>
+              <ChannelCounter>{channel.subscribers} subscribers</ChannelCounter>
+              <Description>{currentVideo?.desc}</Description>
             </ChannelDetail>
           </ChannelInfo>
-          <Subscribe>SUBSCRIBE</Subscribe>
+          <Subscribe onClick={handleSub}>
+            {currentUser?.subscribedUsers?.includes(channel._id)
+              ? "SUBSCRIBED"
+              : "SUBSCRIBE"}
+          </Subscribe>
         </Channel>
         <Hr />
-        <Comments />
+        <Comments videoId={currentVideo?._id}/>
       </Content>
-      <Recommendation>
-        <Card type="sm" />
-        <Card type="sm" />
-        <Card type="sm" />
-        <Card type="sm" />
-        <Card type="sm" />
-        <Card type="sm" />
-        <Card type="sm" />
-        <Card type="sm" />
-        <Card type="sm" />
-        <Card type="sm" />
-        <Card type="sm" />
-        <Card type="sm" />
-        <Card type="sm" />
-      </Recommendation>
     </Container>
   );
 };

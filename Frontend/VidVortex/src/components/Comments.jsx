@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import Comment from "./Comment";
+import axios from "axios";
+import { useSelector } from "react-redux";
 
 const Container = styled.div``;
 
@@ -25,22 +27,36 @@ const Input = styled.input`
   padding: 5px;
   width: 100%;
 `;
-const Comments = () => {
+const Comments = ({ videoId }) => {
+  const [comments, setComments] = useState([]);
+
+  const { currentUser } = useSelector((state) => state.user);
+
+  useEffect(() => {
+    const fetchComments = async () => {
+      try {
+        const res = await axios.get(
+          `http://localhost:5000/api/comments/${videoId}`
+        );
+        setComments(res.data);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    fetchComments();
+  }, [videoId]);
+
   return (
     <Container>
-    <NewComment>
-    <Avatar src='https://media.istockphoto.com/id/1168187764/photo/serious-male-entrepreneur-sitting-at-desktop-with-laptop-computer-checking-documentation.jpg?s=2048x2048&w=is&k=20&c=3wVaj-ooG8UTp7--JYFZ2DU1GcKxIKRGGP-9PD2doU8='/>
-    <Input placeholder='Add a comment...'/>
-    </NewComment>
-    <Comment/>
-    <Comment/>
-    <Comment/>
-    <Comment/>
-    <Comment/>
-    <Comment/>
-
+      <NewComment>
+        <Avatar src={currentUser.img}/>
+        <Input placeholder="Add a comment..." />
+      </NewComment>
+      {comments.map((comment) => (
+        <Comment key={comment._id} comment={comment} />
+      ))}
     </Container>
-  )
-}
+  );
+};
 
-export default Comments
+export default Comments;

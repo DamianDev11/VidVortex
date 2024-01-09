@@ -1,9 +1,11 @@
-import React from "react";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
+import {format} from "timeago.js"
 
 const Container = styled.div`
-  width: ${(props)=>props.type === "sm" && "360px"};
+  width: ${(props)=>props.type !== "sm" && "480px"};
   margin-bottom:${(props)=>props.type === "sm" ? "10px" : "45px"};
   cursor: pointer;
   display:${(props)=>props.type === "sm" && "flex"};
@@ -14,6 +16,7 @@ const Image = styled.img`
   width: 100%;
   height: ${(props)=>props.type === "sm" ? "120px":"202px"};
   background-color: #999;
+  border-radius:10px;
   flex:1;
 `;
 
@@ -48,17 +51,30 @@ const Info = styled.div`
   color: ${({ theme }) => theme.textSoft};
 `;
 
-const Card = ({ type }) => {
+const Card = ({ type,video }) => {
+  
+  const {title,imgUrl,views,desc,createdAt} = video;
+
+  const [channel, setChannel] = useState({});
+
+  useEffect(() => {
+    const fetchChannel = async () => {
+      const res = await axios.get(`http://localhost:5000/api/users/find/${video.userId}`);
+      setChannel(res.data);
+    };
+    fetchChannel();
+  }, [video.userId]);
+
   return (
-    <Link to="/video/test" style={{ textDecoration: "none" }}>
+    <Link to={`/video/${video._id}`} style={{ textDecoration: "none" }}>
       <Container type={type}>
-        <Image type={type} src="https://images.unsplash.com/photo-1490237014491-822aee911b99?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" />
+        <Image type={type} src={imgUrl}/>
         <Details type={type}>
-          <ChannelImage type={type} src="https://media.istockphoto.com/id/1168187764/photo/serious-male-entrepreneur-sitting-at-desktop-with-laptop-computer-checking-documentation.jpg?s=2048x2048&w=is&k=20&c=3wVaj-ooG8UTp7--JYFZ2DU1GcKxIKRGGP-9PD2doU8=" />
+          <ChannelImage type={type} src={channel.img} />
           <Texts>
-            <Title>Dam1 videos</Title>
-            <ChannelName>Dam1</ChannelName>
-            <Info>100,000 views | 1 day ago</Info>
+            <Title>{title}</Title>
+            <ChannelName>{channel.name}</ChannelName>
+            <Info>{views} views • {format(createdAt)}</Info>
           </Texts>
         </Details>
       </Container>

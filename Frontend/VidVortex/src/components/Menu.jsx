@@ -3,6 +3,7 @@ import styled from "styled-components";
 import damImg from "../images/ytimage.png";
 import HomeIcon from "@mui/icons-material/Home";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const Container = styled.div`
   flex: 1;
@@ -65,6 +66,8 @@ const Title = styled.h2`
   marfin-bottom: 20px;
 `;
 const Menu = ({ darkMode, setDarkMode }) => {
+  const { currentUser } = useSelector((state) => state.user);
+
   return (
     <Container>
       <Wrapper>
@@ -78,14 +81,21 @@ const Menu = ({ darkMode, setDarkMode }) => {
           <HomeIcon />
           Home
         </Item>
-        <Item>
-          <HomeIcon />
-          Explore
-        </Item>
-        <Item>
-          <HomeIcon />
-          Subscriptions
-        </Item>
+        <Link to="trends" style={{ textDecoration: "none", color: "inherit" }}>
+          <Item>
+            <HomeIcon />
+            Explore
+          </Item>
+        </Link>
+        <Link
+          to="subscriptions"
+          style={{ textDecoration: "none", color: "inherit" }}
+        >
+          <Item>
+            <HomeIcon />
+            Subscriptions
+          </Item>
+        </Link>
         <Hr />
         <Item>
           <HomeIcon />
@@ -96,16 +106,20 @@ const Menu = ({ darkMode, setDarkMode }) => {
           History
         </Item>
         <Hr />
-        <Login>
-          Sign In to like,comment and subscribe
-          <Link to="signin" style={{ textDecoration: "none" }}>
-            <Button>
-              <HomeIcon />
-              SIGN IN
-            </Button>
-          </Link>
-        </Login>
-        <Hr />
+        {!currentUser &&
+          <>
+            <Login>
+              Sign In to like,comment and subscribe
+              <Link to="signin" style={{ textDecoration: "none" }}>
+                <Button>
+                  <HomeIcon />
+                  SIGN IN
+                </Button>
+              </Link>
+            </Login>
+            <Hr />
+          </>
+        }
         <Title>Best videos</Title>
         <Item>
           <HomeIcon />

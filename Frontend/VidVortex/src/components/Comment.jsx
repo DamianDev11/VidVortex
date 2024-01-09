@@ -1,4 +1,5 @@
-import React from 'react'
+import axios from 'axios';
+import React, { useEffect, useState } from 'react'
 import styled from 'styled-components'
 
 const Container = styled.div`
@@ -32,13 +33,23 @@ margin-left:5px;
 `;
 const Text = styled.span``;
 
-const Comment = () => {
+const Comment = ({comment}) => {
+  const [channel, setChannel] = useState({});
+  
+
+  useEffect(()=>{
+    const fetchComment = async () =>{
+      const res = await axios.get(`http://localhost:5000/api/users/find/${comment.userId}`)
+      setChannel(res.data)
+    }
+    fetchComment();
+  })
   return (
     <Container>
-    <Avatar src='https://media.istockphoto.com/id/1168187764/photo/serious-male-entrepreneur-sitting-at-desktop-with-laptop-computer-checking-documentation.jpg?s=2048x2048&w=is&k=20&c=3wVaj-ooG8UTp7--JYFZ2DU1GcKxIKRGGP-9PD2doU8='/>
+    <Avatar src={channel.img}/>
     <Details>
-        <Name>Dam<Date>1 day ago</Date></Name>
-        <Text>Lorem ipsum dolor sit amet consectetur adipisicing elit. Magni dolore soluta aut debitis voluptate eveniet distinctio nobis ad praesentium corporis.</Text>
+        <Name>{channel.name}<Date>1 day ago</Date></Name>
+        <Text>{comment.desc}</Text>
     </Details>
     </Container>
   )
